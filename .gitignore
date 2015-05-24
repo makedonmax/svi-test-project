@@ -25,3 +25,8 @@ proguard/
 
 # Log Files
 *.log
+
+#IDEA files
+out/
+.idea/
+*.iml
