@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="infowindow_arrow_margin">10dp</dimen>
+    <dimen name="infowindow_text_layout_margin">10dp</dimen>
+    <dimen name="infowindow_title_text_size">20sp</dimen>
+    <dimen name="infowindow_street_text_size">14sp</dimen>
+    <dimen name="infowindow_distance_text_size">14sp</dimen>
+    <dimen name="infowindow_street_text_margin_left">10dp</dimen>
+</resources>

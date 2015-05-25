@@ -7,18 +7,22 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class PlacesFragment extends Fragment {
 
     private GoogleMap mMap;
     private List<Place> mData;
+    private HashMap<Marker, Place> mMarkerPlaceHashMap;
 
     @Nullable
     @Override
@@ -47,10 +51,57 @@ public class PlacesFragment extends Fragment {
 
     private void updateMap() {
         if (mData == null || mMap == null) return;
+        HashMap<Marker, Place> hashMap = getMarkerPlaceHashMap();
         for (Place place : mData) {
-            mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(place.getLocation().getLatitude(), place.getLocation().getLongitude()))
-                    .title(place.getTitle()));
+            LatLng position = new LatLng(place.getLocation().getLatitude(), place.getLocation().getLongitude());
+            Marker marker = mMap.addMarker(new MarkerOptions().position(position).title(place.getTitle()));
+            hashMap.put(marker, place);
         }
+        setCustomInfoWindow();
+        mMap.setOnInfoWindowClickListener(new OnPlaceInfoWindowClickListener());
+    }
+
+    private HashMap<Marker, Place> getMarkerPlaceHashMap() {
+        if (mMarkerPlaceHashMap == null) {
+            mMarkerPlaceHashMap = new HashMap<Marker, Place>();
+        }
+        return mMarkerPlaceHashMap;
+    }
+
+    private void setCustomInfoWindow() {
+        mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+
+            @Override
+            public View getInfoWindow(Marker arg0) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                View v = getActivity().getLayoutInflater().inflate(R.layout.infowindow, null);
+                Place place = getMarkerPlaceHashMap().get(marker);
+                TextView title = (TextView) v.findViewById(R.id.title);
+                TextView street = (TextView) v.findViewById(R.id.street);
+                TextView distance = (TextView) v.findViewById(R.id.distance);
+                title.setText(place.getTitle());
+                street.setText(place.getLocation().getStreet());
+                distance.setText(String.format("%.2f mi", place.getLocation().getDistance()));
+                return v;
+            }
+        });
+    }
+
+    private static class OnPlaceInfoWindowClickListener implements GoogleMap.OnInfoWindowClickListener {
+
+        @Override
+        public void onInfoWindowClick(Marker marker) {
+
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mMap.setOnInfoWindowClickListener(null);
     }
 }
