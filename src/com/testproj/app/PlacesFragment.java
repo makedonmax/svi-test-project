@@ -59,6 +59,7 @@ public class PlacesFragment extends Fragment {
         }
         setCustomInfoWindow();
         mMap.setOnInfoWindowClickListener(new OnPlaceInfoWindowClickListener());
+        mMap.setMyLocationEnabled(true);
     }
 
     private HashMap<Marker, Place> getMarkerPlaceHashMap() {
