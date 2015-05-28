@@ -1,47 +1,47 @@
 package com.testproj.app.ui;
 
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import com.testproj.app.util.AsyncDrawable;
-import com.testproj.app.util.BitmapWorkerTask;
 import com.testproj.app.R;
 import com.testproj.app.data.Place;
-import com.testproj.app.util.BitmapCache;
+import com.testproj.app.util.ImageLoader;
 
 import java.util.List;
 
-class PlacesListAdapter extends RecyclerView.Adapter<PlacesListAdapter.PersonViewHolder> {
+class PlacesListAdapter extends RecyclerView.Adapter<PlacesListAdapter.PlaceViewHolder> {
 
-    private Resources mResources;
+    public interface OnItemClickListener {
+        void onItemClick(int position);
+    }
+
+    private OnItemClickListener mItemClickListener;
+    private ImageLoader mImageLoader;
     private List<Place> mPlacesList;
-    private Bitmap mDefBmp;
-    private BitmapCache mBitmapCache;
 
-    public PlacesListAdapter(Resources resources, List<Place> places, BitmapCache cache) {
-        mResources = resources;
+    public PlacesListAdapter(List<Place> places, ImageLoader loader, OnItemClickListener clickListener) {
         mPlacesList = places;
-        mDefBmp = BitmapFactory.decodeResource(mResources, R.drawable.ic_launcher);
-        mBitmapCache = cache;
+        mImageLoader = loader;
+        mItemClickListener = clickListener;
     }
 
     @Override
-    public PersonViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+    public PlaceViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
         View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.placecard, viewGroup, false);
-        return new PersonViewHolder(v);
+        return new PlaceViewHolder(v, mItemClickListener);
     }
 
     @Override
-    public void onBindViewHolder(PersonViewHolder personViewHolder, int i) {
-        personViewHolder.personName.setText(mPlacesList.get(i).getTitle());
-        personViewHolder.personAge.setText(mPlacesList.get(i).getLocation().getStreet());
-        loadBitmap(mPlacesList.get(i).getImageUrl(), personViewHolder.personPhoto);
+    public void onBindViewHolder(PlaceViewHolder placeViewHolder, int i) {
+        placeViewHolder.title.setText(mPlacesList.get(i).getTitle());
+        placeViewHolder.street.setText(mPlacesList.get(i).getLocation().getStreet());
+        if (mImageLoader != null) {
+            mImageLoader.loadBitmap(mPlacesList.get(i).getImageUrl(), placeViewHolder.image);
+        }
     }
 
     @Override
@@ -49,39 +49,27 @@ class PlacesListAdapter extends RecyclerView.Adapter<PlacesListAdapter.PersonVie
         return mPlacesList.size();
     }
 
-    public static class PersonViewHolder extends RecyclerView.ViewHolder {
-        TextView personName;
-        TextView personAge;
-        ImageView personPhoto;
+    public static class PlaceViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        PersonViewHolder(View itemView) {
+        private OnItemClickListener mClickListener;
+        private TextView title;
+        private TextView street;
+        private ImageView image;
+
+        PlaceViewHolder(View itemView, OnItemClickListener listener) {
             super(itemView);
-            personName = (TextView) itemView.findViewById(R.id.person_name);
-            personAge = (TextView) itemView.findViewById(R.id.person_age);
-            personPhoto = (ImageView) itemView.findViewById(R.id.person_photo);
+            mClickListener = listener;
+            title = (TextView) itemView.findViewById(R.id.place_title);
+            street = (TextView) itemView.findViewById(R.id.place_street);
+            image = (ImageView) itemView.findViewById(R.id.place_image);
+            itemView.setOnClickListener(this);
         }
-    }
 
-    private void loadBitmap(String url, ImageView imageView) {
-        if (cancelPotentialWork(url, imageView)) {
-            final BitmapWorkerTask task = new BitmapWorkerTask(imageView, mBitmapCache);
-            final AsyncDrawable asyncDrawable = new AsyncDrawable(mResources, mDefBmp, task);
-            imageView.setImageDrawable(asyncDrawable);
-            task.execute(url);
-        }
-    }
-
-    private boolean cancelPotentialWork(String url, ImageView imageView) {
-        final BitmapWorkerTask bitmapWorkerTask = BitmapWorkerTask.getBitmapWorkerTask(imageView);
-
-        if (bitmapWorkerTask != null) {
-            final String bitmapUrl = bitmapWorkerTask.getUrl();
-            if (bitmapUrl == null || !bitmapUrl.equals(url)) {
-                bitmapWorkerTask.cancel(true);
-            } else {
-                return false;
+        @Override
+        public void onClick(View view) {
+            if (mClickListener != null) {
+                mClickListener.onItemClick(getAdapterPosition());
             }
         }
-        return true;
     }
 }

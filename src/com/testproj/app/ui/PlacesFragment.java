@@ -1,7 +1,9 @@
 package com.testproj.app.ui;
 
+import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,32 +23,43 @@ import com.testproj.app.R;
 import com.testproj.app.data.Place;
 import com.testproj.app.util.BitmapCache;
 import com.testproj.app.util.DiskBitmapCache;
+import com.testproj.app.util.ImageLoader;
 
 import java.util.HashMap;
 import java.util.List;
 
 public class PlacesFragment extends Fragment {
 
+    public interface PlacesFragmentListener {
+        ImageLoader getImageLoader();
+    }
+
     private static final String MAP_FRAGMENT_TAG = "map";
     public static final String PLACES_LIST_VISIBILITY_KEY = "places_list_visibility";
-    private GoogleMap mMap;
+
     private List<Place> mData;
     private HashMap<Marker, Place> mMarkerPlaceHashMap;
-    private RecyclerView mPlacesListView;
-    private BitmapCache mBitmapCache;
+    private PlacesFragmentListener mListener;
+
+    private GoogleMap mMap;
     private Button mListButton;
+    private RecyclerView mPlacesListView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        RetainFragment retainFragment = RetainFragment.findOrCreateRetainFragment(getFragmentManager());
-        mBitmapCache = retainFragment.mRetainedCache;
-        if (mBitmapCache == null) {
-            mBitmapCache = new DiskBitmapCache(getActivity());
-            retainFragment.mRetainedCache = mBitmapCache;
-        }
-
         setRetainInstance(true);
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+        try {
+            mListener = (PlacesFragmentListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement PlacesFragmentListener");
+        }
     }
 
     @Nullable
@@ -97,7 +110,8 @@ public class PlacesFragment extends Fragment {
 
     public void setData(List<Place> data) {
         mData = data;
-        PlacesListAdapter adapter = new PlacesListAdapter(getResources(), mData, mBitmapCache);
+        PlacesListAdapter adapter = new PlacesListAdapter(mData, mListener.getImageLoader(),
+                new OnPlacesListItemClickListener());
         mPlacesListView.setAdapter(adapter);
         updateMap();
     }
@@ -152,23 +166,33 @@ public class PlacesFragment extends Fragment {
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        if (mBitmapCache != null) mBitmapCache.flush();
-    }
-
-    @Override
     public void onDestroy() {
         super.onDestroy();
         if (mMap != null) mMap.setOnInfoWindowClickListener(null);
-        if (mBitmapCache != null) mBitmapCache.close();
     }
 
-    private static class OnPlaceInfoWindowClickListener implements GoogleMap.OnInfoWindowClickListener {
+    private void startPlaceInfoActivity(Place place) {
+        Intent intent = new Intent(getActivity(), PlaceInfoActivity.class);
+        intent.putExtra(PlaceInfoActivity.TITLE_INTENT_KEY, place.getTitle());
+        intent.putExtra(PlaceInfoActivity.IMAGE_URL_INTENT_KEY, place.getImageUrl());
+        startActivity(intent);
+    }
+
+    private class OnPlaceInfoWindowClickListener implements GoogleMap.OnInfoWindowClickListener {
 
         @Override
         public void onInfoWindowClick(Marker marker) {
+            Place place = getMarkerPlaceHashMap().get(marker);
+            startPlaceInfoActivity(place);
+        }
+    }
 
+    private class OnPlacesListItemClickListener implements PlacesListAdapter.OnItemClickListener {
+
+        @Override
+        public void onItemClick(int position) {
+            Place place = mData.get(position);
+            startPlaceInfoActivity(place);
         }
     }
 }

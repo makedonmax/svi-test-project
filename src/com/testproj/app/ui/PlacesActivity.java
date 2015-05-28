@@ -1,4 +1,4 @@
-package com.testproj.app;
+package com.testproj.app.ui;
 
 import android.app.Activity;
 import android.content.Context;
@@ -8,9 +8,10 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
+import com.testproj.app.R;
 import com.testproj.app.data.Place;
 import com.testproj.app.data.PlaceLocation;
-import com.testproj.app.ui.PlacesFragment;
+import com.testproj.app.util.ImageLoader;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,16 +21,22 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class MainActivity extends Activity {
+public class PlacesActivity extends Activity implements PlacesFragment.PlacesFragmentListener {
 
-    private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private static final String LOG_TAG = PlacesActivity.class.getSimpleName();
     public static final String PLACES_FRAGMENT_TAG = "places_fragment";
+    private static ImageLoader mImageLoader;
+
     private PlacesFragment mPlacesFragment;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Objects.requireNonNull(mImageLoader, "Image loader didn't set. See \"setImageLoader()\" method.");
+
         setContentView(R.layout.main);
 
         mPlacesFragment = (PlacesFragment) getFragmentManager().findFragmentByTag(PLACES_FRAGMENT_TAG);
@@ -46,6 +53,15 @@ public class MainActivity extends Activity {
         } else {
             Toast.makeText(this, "No network connection available.", Toast.LENGTH_LONG);
         }
+    }
+
+    @Override
+    public ImageLoader getImageLoader() {
+        return mImageLoader;
+    }
+
+    public static void setImageLoader(ImageLoader loader) {
+        PlacesActivity.mImageLoader = loader;
     }
 
     private class DownloadDataTask extends AsyncTask<String, Void, List<Place>> {
