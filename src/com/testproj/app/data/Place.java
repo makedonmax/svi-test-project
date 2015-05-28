@@ -1,4 +1,4 @@
-package com.testproj.app;
+package com.testproj.app.data;
 
 public class Place {
     private String id;

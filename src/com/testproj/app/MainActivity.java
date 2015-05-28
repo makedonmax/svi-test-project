@@ -8,6 +8,9 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
+import com.testproj.app.data.Place;
+import com.testproj.app.data.PlaceLocation;
+import com.testproj.app.ui.PlacesFragment;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,6 +24,7 @@ import java.util.List;
 public class MainActivity extends Activity {
 
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    public static final String PLACES_FRAGMENT_TAG = "places_fragment";
     private PlacesFragment mPlacesFragment;
 
     @Override
@@ -28,8 +32,11 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        mPlacesFragment = new PlacesFragment();
-        getFragmentManager().beginTransaction().add(R.id.mainlayout, mPlacesFragment).show(mPlacesFragment).commit();
+        mPlacesFragment = (PlacesFragment) getFragmentManager().findFragmentByTag(PLACES_FRAGMENT_TAG);
+        if (mPlacesFragment == null) {
+            mPlacesFragment = new PlacesFragment();
+            getFragmentManager().beginTransaction().replace(R.id.mainlayout, mPlacesFragment, PLACES_FRAGMENT_TAG).commit();
+        }
 
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
