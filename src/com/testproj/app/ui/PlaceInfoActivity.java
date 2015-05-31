@@ -1,12 +1,9 @@
 package com.testproj.app.ui;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 import android.widget.ImageView;
-import android.widget.TextView;
 import com.testproj.app.R;
 import com.testproj.app.util.ImageLoader;
 

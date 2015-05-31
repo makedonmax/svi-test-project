@@ -1,31 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"
-            android:orientation="vertical">
-    <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1">
-
-        <FrameLayout
-                android:id="@+id/fragment_container"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_height="match_parent">
 
-        <android.support.v7.widget.RecyclerView
-                android:id="@+id/list"
+    <com.sothree.slidinguppanel.SlidingUpPanelLayout
+            xmlns:sothree="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/sliding_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="bottom"
+            sothree:umanoPanelHeight="0dp"
+            sothree:umanoShadowHeight="0dp"
+            sothree:umanoParalaxOffset="0dp"
+            sothree:umanoDragView="@+id/dragView"
+            sothree:umanoOverlay="true">
+
+        <!-- MAIN CONTENT -->
+        <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            <FrameLayout
+                    android:id="@+id/fragment_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+            <Button
+                    android:id="@+id/show_content_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/places_show_btn_height"
+                    android:layout_gravity="bottom"
+                    android:text="@string/places_show_list_btn_text"
+                    android:visibility="invisible"/>
+        </FrameLayout>
+
+        <!-- SLIDING LAYOUT -->
+        <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:visibility="invisible"/>
+                android:background="@android:color/transparent"
+                android:orientation="vertical"
+                android:clickable="true"
+                android:focusable="false"
+                android:id="@+id/dragView"
+                android:paddingLeft="@dimen/places_list_sliding_layout_padding_left"
+                android:paddingRight="@dimen/places_list_sliding_layout_padding_right">
 
-    </FrameLayout>
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:orientation="horizontal"
+                    android:visibility="invisible">
+            </LinearLayout>
 
-    <Button
-            android:id="@+id/list_btn"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="List results"/>
+            <ListView
+                android:id="@+id/list"
+                android:cacheColorHint="@android:color/white"
+                android:drawSelectorOnTop="true"
+                android:background="@android:color/transparent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:smoothScrollbar="false"
+                android:dividerHeight="@dimen/places_list_divider_height"
+                android:divider="@android:color/transparent"/>
 
-</LinearLayout>
+        </LinearLayout>
+    </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 
+</RelativeLayout>

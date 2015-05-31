@@ -16,7 +16,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -43,15 +45,15 @@ public class PlacesActivity extends Activity implements PlacesFragment.PlacesFra
         if (mPlacesFragment == null) {
             mPlacesFragment = new PlacesFragment();
             getFragmentManager().beginTransaction().replace(R.id.mainlayout, mPlacesFragment, PLACES_FRAGMENT_TAG).commit();
-        }
 
-        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
-            String stringUrl = "https://gist.githubusercontent.com/benigeri/1ba45a098aed0b21ae0c/raw/db28f872d6dd59c5766710abc685e01c25a0f020/places1.json";
-            new DownloadDataTask().execute(stringUrl);
-        } else {
-            Toast.makeText(this, "No network connection available.", Toast.LENGTH_LONG);
+            ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isConnected()) {
+                String stringUrl = "https://gist.githubusercontent.com/benigeri/1ba45a098aed0b21ae0c/raw/db28f872d6dd59c5766710abc685e01c25a0f020/places1.json";
+                new DownloadDataTask().execute(stringUrl);
+            } else {
+                Toast.makeText(this, "No network connection available.", Toast.LENGTH_LONG);
+            }
         }
     }
 
