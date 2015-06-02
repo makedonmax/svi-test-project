@@ -19,7 +19,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
-import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelState;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout.SlideState;
 import com.testproj.app.R;
 import com.testproj.app.data.Place;
 import com.testproj.app.util.ImageLoader;
@@ -30,11 +30,12 @@ import java.util.List;
 public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.PanelSlideListener {
 
     private static final String MAP_FRAGMENT_TAG = "map";
-    private static final String PLACES_LIST_STATE = "places_list_visibility";
+    public static final String LIST_SCROLL_POSITION = "scroll_position";
+    private static final String SHOW_LIST_BTN_VISIBLE = "show_list_btn_visible";
     private static final float ZOOMTO_COLLAPSED_STATE = 14f;
     private static final float ZOOMTO_EXPANDED_STATE = 11f;
     private static final int ANIMATE_DURATION_MS = 800;
-    public static final String LIST_SCROLL_POSITION = "scroll_position";
+    public static final float ANCHOR_POINT = 0.4f;
 
     private List<Place> mData;
     private HashMap<Marker, Place> mMarkerPlaceHashMap;
@@ -72,27 +73,28 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
             mMainView = inflater.inflate(R.layout.places, container, false);
 
             mPlacesListView = (ListView) mMainView.findViewById(R.id.list);
+            mPlacesListView.setOverScrollMode(ListView.OVER_SCROLL_NEVER);
             mPlacesListView.setOnItemClickListener(mPlaceClickListener);
 
             mSlidingUpPanelLayout = (SlidingUpPanelLayout) mMainView.findViewById(R.id.sliding_layout);
-            mSlidingUpPanelLayout.setAnchorPoint(0.6f);
+            mSlidingUpPanelLayout.setEnableDragViewTouchEvents(true);
+            mSlidingUpPanelLayout.setAnchorPoint(ANCHOR_POINT);
+            mSlidingUpPanelLayout.setPanelHeight(0);
+            mSlidingUpPanelLayout.setScrollableView(mPlacesListView, 0);
+
             mSlidingUpPanelLayout.setPanelSlideListener(this);
+
+            mSlidingUpPanelLayout.expandPane(SlideState.ANCHORED);
 
             mShowBtn = (Button) mMainView.findViewById(R.id.show_content_btn);
             mShowBtn.setOnClickListener(new OnShowButtonClickListener());
         }
 
-        PanelState state = PanelState.ANCHORED;
         if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey(PLACES_LIST_STATE)) {
-                state = PanelState.valueOf(savedInstanceState.getString(PLACES_LIST_STATE));
-            }
             mPlacesListView.setSelection(savedInstanceState.getInt(LIST_SCROLL_POSITION));
         }
-        mSlidingUpPanelLayout.setPanelState(state);
 
-        int btnVisibility = (PanelState.COLLAPSED == mSlidingUpPanelLayout.getPanelState())
-                            ? View.VISIBLE : View.INVISIBLE;
+        int btnVisibility = mSlidingUpPanelLayout.isCollapsed() ? View.VISIBLE : View.INVISIBLE;
         mShowBtn.setVisibility(btnVisibility);
 
         return mMainView;
@@ -177,8 +179,7 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        String state = mSlidingUpPanelLayout.getPanelState().name();
-        outState.putString(PLACES_LIST_STATE, state);
+        outState.putBoolean(SHOW_LIST_BTN_VISIBLE, mSlidingUpPanelLayout.isCollapsed());
         outState.putInt(LIST_SCROLL_POSITION, mPlacesListView.getFirstVisiblePosition());
     }
 
@@ -202,7 +203,6 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
     @Override
     public void onPanelCollapsed(View panel) {
         mMap.animateCamera(CameraUpdateFactory.zoomTo(ZOOMTO_COLLAPSED_STATE), ANIMATE_DURATION_MS, null);
-
         mShowBtn.setVisibility(View.VISIBLE);
     }
 
@@ -213,10 +213,6 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
 
     @Override
     public void onPanelAnchored(View panel) {
-    }
-
-    @Override
-    public void onPanelHidden(View panel) {
     }
 
     public interface PlacesFragmentListener {
@@ -249,8 +245,8 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
         public void onClick(View view) {
             if (mSlidingUpPanelLayout != null) {
                 mPlacesListView.setSelection(0);
-                mSlidingUpPanelLayout.setPanelState(PanelState.ANCHORED);
                 mShowBtn.setVisibility(View.INVISIBLE);
+                mSlidingUpPanelLayout.expandPane(SlideState.ANCHORED);
             }
         }
     }

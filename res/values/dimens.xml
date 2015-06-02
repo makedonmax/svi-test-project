@@ -17,5 +17,5 @@
     <dimen name="places_list_sliding_layout_padding_right">16dp</dimen>
     <dimen name="places_list_divider_height">10dp</dimen>
 
-
+    <dimen name="map_height">0dp</dimen>
 </resources>
