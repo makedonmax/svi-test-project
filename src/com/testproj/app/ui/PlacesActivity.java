@@ -1,8 +1,11 @@
 package com.testproj.app.ui;
 
 import android.app.Activity;
+import android.content.Context;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 import com.testproj.app.R;
 import com.testproj.app.data.DataParser;
 import com.testproj.app.data.Place;
@@ -47,6 +50,10 @@ public class PlacesActivity extends Activity implements PlacesFragment.PlacesFra
             mPlacesFragment = new PlacesFragment();
             getFragmentManager().beginTransaction().replace(R.id.mainlayout, mPlacesFragment, PLACES_FRAGMENT_TAG).commit();
         }
+
+        if (!isOnline()) {
+            Toast.makeText(this, R.string.no_connection, Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -72,7 +79,7 @@ public class PlacesActivity extends Activity implements PlacesFragment.PlacesFra
     @Override
     public void getNextDataChunk(OnDataLoadedListener listener) {
         if (listener != null) {
-            if (mDataInd < mDataLinks.length) {
+            if (isOnline() && mDataInd < mDataLinks.length) {
                 new Thread(new DownloadDataTask(mDataLinks[mDataInd], listener)).start();
                 mDataInd++;
             } else {
@@ -84,6 +91,11 @@ public class PlacesActivity extends Activity implements PlacesFragment.PlacesFra
     @Override
     public void resetLoader() {
         mDataInd = 0;
+    }
+
+    private boolean isOnline() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 
     private static class DownloadDataTask implements Runnable {

@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">Places</string>
     <string name="places_show_list_btn_text">List results</string>
+    <string name="no_connection">No connection to the Internet</string>
 </resources>

@@ -98,6 +98,7 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
             mSlidingUpPanelLayout.setScrollableView(mPlacesListView, 0);
             mSlidingUpPanelLayout.setPanelSlideListener(this);
             mSlidingUpPanelLayout.expandPane(SlideState.ANCHORED);
+            mSlidingUpPanelLayout.setVisibility(View.INVISIBLE);
 
             mShowBtn = (Button) mMainView.findViewById(R.id.show_content_btn);
             mShowBtn.setOnClickListener(new OnShowButtonClickListener());
@@ -146,6 +147,7 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
                             @Override
                             public void run() {
                                 mData = data;
+                                mSlidingUpPanelLayout.setVisibility(View.VISIBLE);
                                 mAdapter = new PlacesListAdapter(getActivity(), mData, mListener.getImageLoader());
                                 mPlacesListView.setAdapter(mAdapter);
                                 updateMap();
