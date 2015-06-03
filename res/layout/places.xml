@@ -45,12 +45,12 @@
             <View
                     android:id="@+id/transparentView"
                     android:visibility="gone"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_alignParentTop="true"/>
 
-            <ListView
-                android:id="@+id/list"
+            <com.handmark.pulltorefresh.library.PullToRefreshListView
+                android:id="@+id/pull_to_refresh_listview"
                 android:cacheColorHint="@android:color/white"
                 android:drawSelectorOnTop="true"
                 android:background="@android:color/transparent"

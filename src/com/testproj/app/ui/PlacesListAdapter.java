@@ -9,7 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import com.testproj.app.R;
 import com.testproj.app.data.Place;
-import com.testproj.app.util.ImageLoader;
+import com.testproj.app.util.loader.ImageLoader;
 
 import java.util.List;
 

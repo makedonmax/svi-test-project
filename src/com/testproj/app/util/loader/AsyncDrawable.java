@@ -1,4 +1,4 @@
-package com.testproj.app.util;
+package com.testproj.app.util.loader;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;

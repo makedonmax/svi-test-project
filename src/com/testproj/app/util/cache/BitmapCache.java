@@ -1,4 +1,4 @@
-package com.testproj.app.util;
+package com.testproj.app.util.cache;
 
 import android.graphics.Bitmap;
 

@@ -3,10 +3,10 @@ package com.testproj.app;
 import android.app.Application;
 import com.testproj.app.ui.PlacesActivity;
 import com.testproj.app.ui.PlaceInfoActivity;
-import com.testproj.app.util.AsyncImageLoader;
-import com.testproj.app.util.BitmapCache;
-import com.testproj.app.util.DiskBitmapCache;
-import com.testproj.app.util.ImageLoader;
+import com.testproj.app.util.loader.AsyncImageLoader;
+import com.testproj.app.util.cache.BitmapCache;
+import com.testproj.app.util.cache.DiskBitmapCache;
+import com.testproj.app.util.loader.ImageLoader;
 
 public class SviTestApplication extends Application {
 

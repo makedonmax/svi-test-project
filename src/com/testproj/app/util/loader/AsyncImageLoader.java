@@ -1,9 +1,10 @@
-package com.testproj.app.util;
+package com.testproj.app.util.loader;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.widget.ImageView;
+import com.testproj.app.util.cache.BitmapCache;
 
 public class AsyncImageLoader implements ImageLoader {
 

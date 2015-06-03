@@ -5,6 +5,8 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,11 +20,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.SlideState;
 import com.testproj.app.R;
 import com.testproj.app.data.Place;
-import com.testproj.app.util.ImageLoader;
+import com.testproj.app.util.loader.ImageLoader;
+import com.testproj.app.util.loader.PlaceDataLoader;
+import com.testproj.app.util.loader.PlaceDataLoader.OnDataLoadedListener;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +38,6 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
     private static final String MAP_FRAGMENT_TAG = "map";
     public static final String LIST_SCROLL_POSITION = "scroll_position";
     private static final String SHOW_LIST_BTN_VISIBLE = "show_list_btn_visible";
-    private static final float ZOOMTO_COLLAPSED_STATE = 14f;
     private static final float ZOOMTO_EXPANDED_STATE = 11f;
     private static final int ANIMATE_DURATION_MS = 800;
     public static final float ANCHOR_POINT = 0.4f;
@@ -41,12 +46,17 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
     private HashMap<Marker, Place> mMarkerPlaceHashMap;
     private PlacesFragmentListener mListener;
     private OnPlaceClickListener mPlaceClickListener = new OnPlaceClickListener();
+    private PlacesListAdapter mAdapter;
+    private OnDataLoadedListener mOnDataLoadedListener;
+    private int mMapMarkersBoundPaddingPx;
+    private LatLngBounds mMarkersBounds;
 
     private GoogleMap mMap;
     private ListView mPlacesListView;
     private SlidingUpPanelLayout mSlidingUpPanelLayout;
     private Button mShowBtn;
     private View mMainView;
+    private PullToRefreshListView mPullToRefreshView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -63,6 +73,8 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString() + " must implement PlacesFragmentListener");
         }
+
+        mMapMarkersBoundPaddingPx = getResources().getDimensionPixelSize(R.dimen.map_markers_bound_padding);
     }
 
     @Nullable
@@ -72,8 +84,11 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
         if (mMainView == null) {
             mMainView = inflater.inflate(R.layout.places, container, false);
 
-            mPlacesListView = (ListView) mMainView.findViewById(R.id.list);
-            mPlacesListView.setOverScrollMode(ListView.OVER_SCROLL_NEVER);
+            mPullToRefreshView = (PullToRefreshListView) mMainView.findViewById(R.id.pull_to_refresh_listview);
+            mPullToRefreshView.setMode(PullToRefreshBase.Mode.PULL_FROM_END);
+            mPullToRefreshView.setOnRefreshListener(new OnPlacesRefreshListener());
+
+            mPlacesListView = mPullToRefreshView.getRefreshableView();
             mPlacesListView.setOnItemClickListener(mPlaceClickListener);
 
             mSlidingUpPanelLayout = (SlidingUpPanelLayout) mMainView.findViewById(R.id.sliding_layout);
@@ -81,9 +96,7 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
             mSlidingUpPanelLayout.setAnchorPoint(ANCHOR_POINT);
             mSlidingUpPanelLayout.setPanelHeight(0);
             mSlidingUpPanelLayout.setScrollableView(mPlacesListView, 0);
-
             mSlidingUpPanelLayout.setPanelSlideListener(this);
-
             mSlidingUpPanelLayout.expandPane(SlideState.ANCHORED);
 
             mShowBtn = (Button) mMainView.findViewById(R.id.show_content_btn);
@@ -116,18 +129,39 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
                 updateMap();
             }
         });
+
+        if (mAdapter == null) {
+            mListener.getDataLoader().resetLoader();
+            mListener.getDataLoader().getNextDataChunk(getOnDataLoadedListener());
+        }
     }
 
-    public void setData(List<Place> data) {
-        mData = data;
-        PlacesListAdapter adapter = new PlacesListAdapter(getActivity(), mData, mListener.getImageLoader());
-        mPlacesListView.setAdapter(adapter);
-        updateMap();
+    private OnDataLoadedListener getOnDataLoadedListener() {
+        if (mOnDataLoadedListener == null) {
+            mOnDataLoadedListener = new OnDataLoadedListener() {
+                @Override
+                public void onDataLoaded(final List<Place> data) {
+                    if (data != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mData = data;
+                                mAdapter = new PlacesListAdapter(getActivity(), mData, mListener.getImageLoader());
+                                mPlacesListView.setAdapter(mAdapter);
+                                updateMap();
+                            }
+                        });
+                    }
+                }
+            };
+        }
+        return mOnDataLoadedListener;
     }
 
     private void updateMap() {
         if (mData == null || mMap == null) return;
         HashMap<Marker, Place> hashMap = getMarkerPlaceHashMap();
+        hashMap.clear();
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         for (Place place : mData) {
             LatLng position = new LatLng(place.getLocation().getLatitude(), place.getLocation().getLongitude());
@@ -141,9 +175,19 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
         mMap.getUiSettings().setCompassEnabled(false);
         mMap.getUiSettings().setZoomControlsEnabled(false);
 
-        LatLngBounds bounds = builder.build();
-        CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, 0);
-        mMap.animateCamera(cu);
+        mMarkersBounds = builder.build();
+        mMap.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+            @Override
+            public void onMapLoaded() {
+                animateMapToMarkers(mMap, mMarkersBounds);
+            }
+        });
+    }
+
+    private void animateMapToMarkers(GoogleMap map, LatLngBounds bounds) {
+        if (map == null || bounds == null) return;
+        CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds, mMapMarkersBoundPaddingPx);
+        map.animateCamera(cu);
     }
 
     private HashMap<Marker, Place> getMarkerPlaceHashMap() {
@@ -176,6 +220,14 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
         });
     }
 
+    private void startPlaceInfoActivity(Place place) {
+        Intent intent = new Intent(getActivity(), PlaceInfoActivity.class);
+        intent.putExtra(PlaceInfoActivity.TITLE_INTENT_KEY, place.getTitle());
+        intent.putExtra(PlaceInfoActivity.IMAGE_URL_INTENT_KEY, place.getImageUrl());
+        startActivity(intent);
+    }
+
+
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -189,20 +241,13 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
         if (mMap != null) mMap.setOnInfoWindowClickListener(null);
     }
 
-    private void startPlaceInfoActivity(Place place) {
-        Intent intent = new Intent(getActivity(), PlaceInfoActivity.class);
-        intent.putExtra(PlaceInfoActivity.TITLE_INTENT_KEY, place.getTitle());
-        intent.putExtra(PlaceInfoActivity.IMAGE_URL_INTENT_KEY, place.getImageUrl());
-        startActivity(intent);
-    }
-
     @Override
     public void onPanelSlide(View panel, float slideOffset) {
     }
 
     @Override
     public void onPanelCollapsed(View panel) {
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(ZOOMTO_COLLAPSED_STATE), ANIMATE_DURATION_MS, null);
+        animateMapToMarkers(mMap, mMarkersBounds);
         mShowBtn.setVisibility(View.VISIBLE);
     }
 
@@ -217,6 +262,7 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
 
     public interface PlacesFragmentListener {
         ImageLoader getImageLoader();
+        PlaceDataLoader getDataLoader();
     }
 
     private class OnPlaceClickListener implements GoogleMap.OnInfoWindowClickListener,
@@ -232,8 +278,8 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
 
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-            Place place = null;
-            if (mData != null && (place = mData.get(position)) != null) {
+            Place place = (Place) mPlacesListView.getItemAtPosition(position);
+            if (place != null) {
                 startPlaceInfoActivity(place);
             }
         }
@@ -248,6 +294,31 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
                 mShowBtn.setVisibility(View.INVISIBLE);
                 mSlidingUpPanelLayout.expandPane(SlideState.ANCHORED);
             }
+        }
+    }
+
+    private class OnPlacesRefreshListener implements PullToRefreshBase.OnRefreshListener {
+
+        private OnDataLoadedListener mOnRefreshDataListener = new OnDataLoadedListener() {
+            @Override
+            public void onDataLoaded(final List<Place> data) {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (data != null) {
+                            mData.addAll(data);
+                            mAdapter.notifyDataSetChanged();
+                            updateMap();
+                        }
+                        mPullToRefreshView.onRefreshComplete();
+                    }
+                });
+            }
+        };
+
+        @Override
+        public void onRefresh(PullToRefreshBase refreshView) {
+            mListener.getDataLoader().getNextDataChunk(mOnRefreshDataListener);
         }
     }
 }

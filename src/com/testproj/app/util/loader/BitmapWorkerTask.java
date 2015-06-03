@@ -1,9 +1,11 @@
-package com.testproj.app.util;
+package com.testproj.app.util.loader;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.widget.ImageView;
+import com.testproj.app.util.Utils;
+import com.testproj.app.util.cache.BitmapCache;
 
 import java.lang.ref.WeakReference;
 

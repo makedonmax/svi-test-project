@@ -1,7 +1,8 @@
-package com.testproj.app.util;
+package com.testproj.app.util.cache;
 
 import android.graphics.Bitmap;
 import android.util.LruCache;
+import com.testproj.app.util.cache.BitmapCache;
 
 public class MemoryCache implements BitmapCache {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.testproj.app.util;
+package com.testproj.app.util.cache;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;

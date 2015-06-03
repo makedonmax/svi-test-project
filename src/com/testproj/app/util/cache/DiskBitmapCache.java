@@ -1,4 +1,4 @@
-package com.testproj.app.util;
+package com.testproj.app.util.cache;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
+import com.testproj.app.util.Utils;
 
 import java.io.*;
 import java.security.MessageDigest;
