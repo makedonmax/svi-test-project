@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -164,6 +165,7 @@ public class PlacesFragment extends Fragment implements SlidingUpPanelLayout.Pan
         if (mData == null || mMap == null) return;
         HashMap<Marker, Place> hashMap = getMarkerPlaceHashMap();
         hashMap.clear();
+        mMap.clear();
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         for (Place place : mData) {
             LatLng position = new LatLng(place.getLocation().getLatitude(), place.getLocation().getLongitude());
